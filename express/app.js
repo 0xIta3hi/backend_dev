@@ -12,7 +12,8 @@ const pool = await new Pool({
     host: 'localhost',
     database:'postgres',
     password:'1234',
-    port:5432
+    port:5432,
+    max:4,
 })
 await pool.connect()// Hello world!
 
@@ -41,6 +42,13 @@ app.get('/pg_data', async (req, res) => {
         res.status(500).json({ error: "Failed to fetch data" });
     }
 });
+
+app.get('/poison', async (req, res) => {
+    const client = await pool.connect();
+    console.log('borrowed client..')
+    res.send("just killed one connection")
+})
+
 
 
 app.listen(port, () => {
