@@ -6,15 +6,15 @@ import express from 'express';
 const app = express();
 const port = 8080;
 
-import { Client } from 'pg'
-const client = await new Client({
+import { Pool } from 'pg'
+const pool = await new Pool({
     user:'postgres',
     host: 'localhost',
     database:'postgres',
     password:'1234',
     port:5432
 })
-await client.connect()// Hello world!
+await pool.connect()// Hello world!
 
 app.get('/', (req, res) => {
     const data = {
@@ -28,7 +28,7 @@ app.get('/', (req, res) => {
 app.get('/pg_data', async (req, res) => {
     try {
         // You MUST use 'await' here, or you get [object Promise]
-        const response = await client.query('SELECT $1::text as message', ['Hello world from DB']);
+        const response = await pool.query('SELECT $1::text as message', ['Hello world from DB']);
         
         console.log(`Data from pg: ${response.rows[0].message}`);
 
