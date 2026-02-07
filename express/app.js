@@ -43,13 +43,45 @@ app.get('/pg_data', async (req, res) => {
     }
 });
 
-app.get('/poison', async (req, res) => {
+app.post('/buy', async (req,res) => {
     const client = await pool.connect();
-    console.log('borrowed client..')
-    res.send("just killed one connection")
+    try {
+        const { rows } = await client.query("SELECT quantity FROM inventory WHERE id = 1")
+        const available = rows[0].quantity
+        if (available > 0) {
+            await new Promise(r => setTimeout(r, 50));
+            await client.query("update inventory SET quantity = quantity - 1 WHERE id = 1")
+            res.json({message:"Ticket Purchased!", status:"successfull", remaining:available -1 })
+        }
+        else{
+            res.send("Sold out 0 tickets remain..")
+        }
+    } catch (err){
+        console.error(`Error in processing ticket ${err}`)
+        res.send("server Error")
+    }
+    finally{
+        client.release()
+    }
+
+
+
 })
 
-
+app.get('/safe', async (req,res) => {
+    const safe_client = await pool.connect()
+    try{
+        console.log('borrowed client')
+        res.send('Safe route')
+    }
+    catch (err){
+        console.error('error occured during connection')
+    }
+    finally {
+        safe_client.release()
+        console.log('released the client back to pool!!')
+    }
+})
 
 app.listen(port, () => {
     console.log(`Server started at ${port}`);
