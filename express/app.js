@@ -64,7 +64,51 @@ app.post('/buy', async (req,res) => {
         client.release()
     }
 
+app.post('/buy-safe', async (req, res) => {
+    // 1. We MUST use a single client for a Transaction
+    // You cannot use the 'pool' directly for transactions!
+    const client = await pool.connect();
 
+    try {
+        // --- START TRANSACTION ---
+        await client.query('BEGIN');
+
+        // 2. LOCK THE ROW
+        // "FOR UPDATE" tells Postgres: "Don't let anyone else touch this row"
+        const { rows } = await client.query('SELECT quantity FROM inventory WHERE id = 1 FOR UPDATE');
+        
+        if (rows.length === 0) {
+            throw new Error('Ticket not found');
+        }
+
+        const available = rows[0].quantity;
+
+        // 3. APPLICATION LOGIC
+        if (available > 0) {
+            // Simulate that processing delay again (to prove the lock works)
+            await new Promise(r => setTimeout(r, 50));
+
+            // 4. UPDATE
+            await client.query('UPDATE inventory SET quantity = quantity - 1 WHERE id = 1');
+            
+            // 5. COMMIT (Save changes and RELEASE the lock)
+            await client.query('COMMIT');
+            
+            res.json({ message: 'Purchased!', remaining: available - 1 });
+        } else {
+            // Even if we don't buy, we must commit (or rollback) to release the lock
+            await client.query('ROLLBACK');
+            res.status(400).json({ message: 'Sold out!' });
+        }
+
+    } catch (err) {
+        await client.query('rollback');
+        console.error('Transaction Failed:', err);
+        res.status(500).send('Error');
+    } finally {
+        client.release();
+    }
+});
 
 })
 
