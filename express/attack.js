@@ -3,7 +3,7 @@ import http from 'http';
 const options = {
   hostname: 'localhost',
   port: 8080,
-  path: '/buy',
+  path: '/buy-safe',
   method: 'POST'
 };
 
