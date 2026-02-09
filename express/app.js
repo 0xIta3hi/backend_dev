@@ -1,10 +1,17 @@
 // imported modules
-
 import express from 'express';
+import redis from 'redis';
 
 // Global variables
 const app = express();
 const port = 8080;
+const redisClient = redis.createClient();
+redisClient.on('error', (err) => console.log('Error conecting to redis server'))
+(async () => {
+    await redisClient.connect()
+    console.log("connected to redis server successfully!!")
+})
+
 
 import { Pool } from 'pg'
 const pool = await new Pool({
@@ -116,6 +123,27 @@ app.get('/safe', async (req,res) => {
         console.log('released the client back to pool!!')
     }
 })
+
+// making a faster endpoint with redis.
+app.post('/buy-fast', async (req,res) =>{
+    try{
+        const job = {
+            userId: req.body.userId,
+            timestamp: Date.now(),
+            requestedQty: 1,
+        }
+        await redisClient.lPush('ticket_queue', JSON.stringify(job))
+        res.json({
+            message: 'Request recieved, check email for notification',
+            status: 'processing',
+        });
+
+    } catch (err){
+        console.error(err)
+        res.status(500).send('Queue Error')
+    };
+})
+
 
 app.listen(port, () => {
     console.log(`Server started at ${port}`);
