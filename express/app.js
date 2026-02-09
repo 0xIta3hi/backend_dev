@@ -1,11 +1,11 @@
 // imported modules
 import express from 'express';
-import redis from 'redis';
+import { createClient } from 'redis';
 
 // Global variables
 const app = express();
 const port = 8080;
-const redisClient = redis.createClient();
+const redisClient = createClient();
 redisClient.on('error', (err) => console.log('Error conecting to redis server'))
 (async () => {
     await redisClient.connect()
