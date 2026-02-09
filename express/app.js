@@ -130,7 +130,7 @@ app.get('/safe', async (req,res) => {
 })
 
 // making a faster endpoint with redis.
-app.post('/buy-fast', async (req,res) =>{
+app.post('/buy_fast', async (req,res) =>{
     try{
         const job = {
             userId: req.body.userId,
