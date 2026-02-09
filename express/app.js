@@ -7,10 +7,15 @@ const app = express();
 const port = 8080;
 const redisClient = createClient();
 redisClient.on('error', (err) => console.log('Error conecting to redis server'))
-(async () => {
-    await redisClient.connect()
-    console.log("connected to redis server successfully!!")
-})
+const startServer = async () => {
+    try{
+        await redisClient.connect();
+        console.log("RedisConnected Successfully.")
+    } catch (err) {
+        console.error(err)
+    }
+}
+startServer();
 
 
 import { Pool } from 'pg'
