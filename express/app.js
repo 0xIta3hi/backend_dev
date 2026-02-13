@@ -133,7 +133,6 @@ app.get('/safe', async (req,res) => {
 app.post('/buy_fast', async (req,res) =>{
     try{
         const job = {
-            userId: req.body.userId,
             timestamp: Date.now(),
             requestedQty: 1,
         }
