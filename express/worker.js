@@ -1,5 +1,5 @@
-const { Pool } = require('pg');
-const redis = require('redis');
+import { Pool } from 'pg';
+import redis from 'redis';
 
 // 1. Setup Postgres Connection
 const pool = new Pool({
