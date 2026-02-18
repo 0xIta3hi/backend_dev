@@ -5,7 +5,9 @@ import { createClient } from 'redis';
 // Global variables
 const app = express();
 const port = 8080;
-const redisClient = createClient();
+const redisClient = createClient({
+    url: process.env.REDIS_URL || 'redis://localhost:6379'
+});
 redisClient.on('error', (err) => console.log('Error conecting to redis server'))
 const startServer = async () => {
     try{
@@ -20,6 +22,7 @@ startServer();
 
 import { Pool } from 'pg'
 const pool = await new Pool({
+    connectionString: process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5432/postgres',
     user:'postgres',
     host: 'localhost',
     database:'postgres',
