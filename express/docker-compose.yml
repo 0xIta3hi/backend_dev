@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # Service 1: The Database
+  # 1. Postgres
   postgres:
     image: postgres:13
     environment:
@@ -13,44 +13,46 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
-  # Service 2: The Queue
+  # 2. Redis
   redis:
     image: redis:alpine
     ports:
       - "6379:6379"
 
-  # Service 3: The API Server
+  # 3. API (Internal Only - No Ports Mapped)
   api:
     build: .
     command: node server.js
+    expose:
+      - "3000"  # Only Nginx can talk to this
     environment:
-      DATABASE_URL: postgres://postgres:password@postgres:5432/ticket_app
-      REDIS_URL: redis://redis:6379
+      - DATABASE_URL=postgres://postgres:password@postgres:5432/ticket_app
+      - REDIS_URL=redis://redis:6379
     depends_on:
       - postgres
       - redis
-    expose:
-      - 8080
-    nginx:
-      image: nginx:alpine
-      ports: 
-        - "3000:80"
-      volumes:
-        - "./nginx.conf:/etc/nginx/nginx.conf:ro"
-      depends_on:
-        - "api"
 
-  # Service 4: The Background Worker
+  # 4. Nginx (The Entry Point)
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:80"  # MAP HOST 8080 -> CONTAINER 80
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api
+    restart: always # <--- THE FIX for the crash
+
+  # 5. Worker
   worker:
     build: .
     command: node worker.js
     environment:
-      DATABASE_URL: postgres://postgres:password@postgres:5432/ticket_app
-      REDIS_URL: redis://redis:6379
+      - DATABASE_URL=postgres://postgres:password@postgres:5432/ticket_app
+      - REDIS_URL=redis://redis:6379
     depends_on:
       - postgres
       - redis
 
-# Persist DB data even if containers die
 volumes:
   pgdata:
