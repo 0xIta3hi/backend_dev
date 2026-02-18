@@ -126,7 +126,6 @@ app.post('/buy_fast', async (req,res) =>{
     };
 })
 
-
 app.listen(port, () => {
     console.log(`Server started at ${port}`);
 })
