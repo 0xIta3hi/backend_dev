@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # Service 1: The Database
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ticket_app
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # Service 2: The Queue
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+  # Service 3: The API Server
+  api:
+    build: .
+    command: node server.js
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgres://postgres:password@postgres:5432/ticket_app
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
+
+  # Service 4: The Background Worker
+  worker:
+    build: .
+    command: node worker.js
+    environment:
+      DATABASE_URL: postgres://postgres:password@postgres:5432/ticket_app
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
+
+# Persist DB data even if containers die
+volumes:
+  pgdata:
