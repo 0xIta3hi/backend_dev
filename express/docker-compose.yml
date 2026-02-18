@@ -23,14 +23,22 @@ services:
   api:
     build: .
     command: node server.js
-    ports:
-      - "3000:3000"
     environment:
       DATABASE_URL: postgres://postgres:password@postgres:5432/ticket_app
       REDIS_URL: redis://redis:6379
     depends_on:
       - postgres
       - redis
+    expose:
+      - 8080
+    nginx:
+      image: nginx:alpine
+      ports: 
+        - "3000:80"
+      volumes:
+        - "./nginx.conf:/etc/nginx/nginx.conf:ro"
+      depends_on:
+        - "api"
 
   # Service 4: The Background Worker
   worker:
